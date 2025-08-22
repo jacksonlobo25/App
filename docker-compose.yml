@@ -1,0 +1,55 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        DEV_USERNAME: ${DEV_USERNAME}
+        DEV_UID: ${DEV_UID}
+        DEV_GID: ${DEV_GID}
+        PYTHON_VERSION: ${PYTHON_VERSION}
+        NODE_MAJOR: ${NODE_MAJOR}
+        MAVEN_VERSION: ${MAVEN_VERSION}
+        GRADLE_VERSION: ${GRADLE_VERSION}
+        SPRINGBOOT_CLI_VERSION: ${SPRINGBOOT_CLI_VERSION}
+        TZ: ${TZ}
+    container_name: dev-intellij-box
+    env_file: [.env]
+    user: "${DEV_UID}:${DEV_GID}"
+    working_dir: /workspace
+    environment:
+      DB_HOST: localhost
+      DB_PORT: ${POSTGRES_PORT}
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./:/workspace
+      - home:/home/${DEV_USERNAME}
+      - pyenv:/opt/pyenv
+      - npm:/home/${DEV_USERNAME}/.npm
+      - m2:/home/${DEV_USERNAME}/.m2
+      - gradle:/home/${DEV_USERNAME}/.gradle
+      - pgdata:/var/lib/postgresql/data
+      - ./secrets/ssh/authorized_keys.list:/etc/ssh/authorized_keys.list:ro
+    ports:
+      - "${SSH_PORT}:22"
+      - "${POSTGRES_PORT}:5432"
+      - "${APP_PORT}:8080"
+      - "${UI_PORT}:5173"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1 -p ${POSTGRES_PORT}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  home:
+  pyenv:
+  npm:
+  m2:
+  gradle:
+  pgdata:
