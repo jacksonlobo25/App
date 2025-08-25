@@ -98,11 +98,12 @@ SHELL ["/bin/sh", "-c"]
 COPY scripts/ /opt/scripts/
 RUN chmod +x /opt/scripts/*.sh
 
-# supervisor config (ssh key setup + sshd)
+# supervisor config (ssh key setup + sshd) — log to stdout/stderr
 RUN cat >/etc/supervisor/supervisord.conf <<'EOF'
 [supervisord]
 nodaemon=true
-logfile=/var/log/supervisord.log
+logfile=/dev/stdout
+logfile_maxbytes=0
 
 [program:ssh_setup_keys]
 command=/opt/scripts/ssh-setup-keys.sh
@@ -110,16 +111,20 @@ user=root
 priority=10
 autostart=true
 autorestart=false
-stdout_logfile=/var/log/ssh-setup-keys.log
-stderr_logfile=/var/log/ssh-setup-keys.err
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 
 [program:sshd]
 command=/usr/sbin/sshd -D
 priority=50
 autostart=true
 autorestart=true
-stdout_logfile=/var/log/sshd.supervisor.log
-stderr_logfile=/var/log/sshd.supervisor.err
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 EOF
 
 EXPOSE 22 8080 5173
