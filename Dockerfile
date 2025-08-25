@@ -1,4 +1,3 @@
-
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -43,10 +42,13 @@ RUN corepack enable
 # pyenv + Python 3.13.x
 ENV PYENV_ROOT=/opt/pyenv
 ENV PATH=${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}
-RUN git clone --depth=1 https://github.com/pyenv/pyenv.git ${PYENV_ROOT} \
-    && bash -lc "pyenv install ${PYTHON_VERSION} && pyenv global ${PYTHON_VERSION}" \
-    && bash -lc "python -m ensurepip && python -m pip install -U pip pipx" \
-    && bash -lc "pipx ensurepath"
+RUN git clone --depth=1 https://github.com/pyenv/pyenv.git "${PYENV_ROOT}" \
+ && "${PYENV_ROOT}/bin/pyenv" install -s "${PYTHON_VERSION}" \
+ && "${PYENV_ROOT}/bin/pyenv" global "${PYTHON_VERSION}" \
+ && python -m ensurepip \
+ && python -m pip install -U pip pipx \
+ && python -m pipx ensurepath \
+ && "${PYENV_ROOT}/bin/pyenv" rehash
 
 # dev user
 RUN groupadd -g ${DEV_GID} ${DEV_USERNAME} \
