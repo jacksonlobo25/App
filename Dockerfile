@@ -121,31 +121,32 @@ pidfile=/var/run/supervisord.pid
 logfile=/dev/stdout
 logfile_maxbytes=0
 
-# 1) Make sure SSH host keys exist before anything else
 [program:ssh_hostkeys]
 command=/usr/bin/ssh-keygen -A
 user=root
 priority=5
 autostart=true
+startsecs=0
+startretries=0
 autorestart=false
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 
-# 2) Your key-setup script (authorized_keys, etc.)
 [program:ssh_setup_keys]
 command=/opt/scripts/ssh-setup-keys.sh
 user=root
 priority=10
 autostart=true
+startsecs=0
+startretries=0
 autorestart=false
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 
-# 3) Finally start sshd
 [program:sshd]
 command=/usr/sbin/sshd -D
 user=root
@@ -156,7 +157,6 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
-EOF
 
 EXPOSE 22 8080 5173
 WORKDIR /workspace
