@@ -68,20 +68,28 @@ USER ${DEV_USERNAME}
 SHELL ["/bin/bash", "-lc"]
 
 ENV SDKMAN_DIR="/home/${DEV_USERNAME}/.sdkman"
-# Prevent SDKMAN from prompting during install
 ENV SDKMAN_NON_INTERACTIVE=true
 
+# Install SDKMAN under /home/${DEV_USERNAME}
 RUN curl -s https://get.sdkman.io | bash
-RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
- && sdk install maven ${MAVEN_VERSION} \
- && sdk install gradle ${GRADLE_VERSION} \
- && sdk install springboot ${SPRINGBOOT_CLI_VERSION}
 
+# Sanity check: the init script must exist; print version to prove sdk works
+RUN test -s "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && source "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && sdk version
+
+# Install toolchains (force yes to avoid prompts)
+RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && yes | sdk install maven ${MAVEN_VERSION} \
+ && yes | sdk install gradle ${GRADLE_VERSION} \
+ && yes | sdk install springboot ${SPRINGBOOT_CLI_VERSION}
+
+# Put candidates on PATH for subsequent layers and at runtime
 ENV PATH="$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$SDKMAN_DIR/candidates/springboot/current/bin:$PATH"
 
+# back to root + default shell
 USER root
 SHELL ["/bin/sh", "-c"]
-
 
 # scripts
 COPY scripts/ /opt/scripts/
