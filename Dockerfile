@@ -157,6 +157,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
+EOF
 
 EXPOSE 22 8080 5173
 WORKDIR /workspace
