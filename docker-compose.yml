@@ -15,7 +15,7 @@ services:
         TZ: ${TZ}
     container_name: dev-intellij-box
     env_file: [.env]
-    user: "${DEV_UID}:${DEV_GID}"
+    user: "0:0"
     working_dir: /workspace
     environment:
       # Provide generic names your app can read, alongside Spring overrides

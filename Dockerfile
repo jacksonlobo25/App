@@ -111,13 +111,29 @@ SHELL ["/bin/sh", "-c"]
 COPY scripts/ /opt/scripts/
 RUN chmod +x /opt/scripts/*.sh
 
-# supervisor config (ssh key setup + sshd) — log to stdout/stderr
+# supervisor config — pidfile in /var/run, logs to stdout/stderr, ensure host keys first
+RUN install -d -m 0755 /var/run /var/log/supervisor
+
 RUN cat >/etc/supervisor/supervisord.conf <<'EOF'
 [supervisord]
 nodaemon=true
+pidfile=/var/run/supervisord.pid
 logfile=/dev/stdout
 logfile_maxbytes=0
 
+# 1) Make sure SSH host keys exist before anything else
+[program:ssh_hostkeys]
+command=/usr/bin/ssh-keygen -A
+user=root
+priority=5
+autostart=true
+autorestart=false
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+# 2) Your key-setup script (authorized_keys, etc.)
 [program:ssh_setup_keys]
 command=/opt/scripts/ssh-setup-keys.sh
 user=root
@@ -129,8 +145,10 @@ stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 
+# 3) Finally start sshd
 [program:sshd]
 command=/usr/sbin/sshd -D
+user=root
 priority=50
 autostart=true
 autorestart=true
