@@ -18,11 +18,17 @@ services:
     user: "${DEV_UID}:${DEV_GID}"
     working_dir: /workspace
     environment:
-      DB_HOST: localhost
-      DB_PORT: ${POSTGRES_PORT}
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Provide generic names your app can read, alongside Spring overrides
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_JDBC: ${DATABASE_URL_JDBC}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     volumes:
       - ./:/workspace
       - home:/home/${DEV_USERNAME}
@@ -30,21 +36,14 @@ services:
       - npm:/home/${DEV_USERNAME}/.npm
       - m2:/home/${DEV_USERNAME}/.m2
       - gradle:/home/${DEV_USERNAME}/.gradle
-      - pgdata:/var/lib/postgresql/data
       - ./secrets/ssh/authorized_keys.list:/etc/ssh/authorized_keys.list:ro
     ports:
       - "${SSH_PORT}:22"
-      - "${POSTGRES_PORT}:5432"
       - "${APP_PORT}:8080"
       - "${UI_PORT}:5173"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1 -p ${POSTGRES_PORT}"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
 
 volumes:
   home:
@@ -52,4 +51,3 @@ volumes:
   npm:
   m2:
   gradle:
-  pgdata:
