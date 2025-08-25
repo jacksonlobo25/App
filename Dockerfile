@@ -52,8 +52,10 @@ RUN git clone --depth=1 https://github.com/pyenv/pyenv.git "${PYENV_ROOT}" \
 
 # dev user
 RUN groupadd -g ${DEV_GID} ${DEV_USERNAME} \
-    && useradd -m -s /bin/bash -u ${DEV_UID} -g ${DEV_GID} -G sudo ${DEV_USERNAME} \
-    && echo "${DEV_USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${DEV_USERNAME}
+ && useradd -m -s /bin/bash -u ${DEV_UID} -g ${DEV_GID} -G sudo ${DEV_USERNAME} \
+ && install -d -m 0755 /etc/sudoers.d \
+ && echo "${DEV_USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${DEV_USERNAME} \
+ && chmod 0440 /etc/sudoers.d/${DEV_USERNAME}
 
 # SSHD for JetBrains Gateway (keys only)
 RUN mkdir -p /var/run/sshd \
@@ -63,11 +65,24 @@ RUN mkdir -p /var/run/sshd \
 
 # SDKMAN! (Maven, Gradle, Spring Boot CLI) as DEV user
 USER ${DEV_USERNAME}
-ENV SDKMAN_DIR=/home/${DEV_USERNAME}/.sdkman
-RUN curl -s https://get.sdkman.io | bash \
-    && bash -lc "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install maven ${MAVEN_VERSION} && sdk install gradle ${GRADLE_VERSION} && sdk install springboot ${SPRINGBOOT_CLI_VERSION}"
-ENV PATH=/home/${DEV_USERNAME}/.sdkman/candidates/maven/current/bin:/home/${DEV_USERNAME}/.sdkman/candidates/gradle/current/bin:/home/${DEV_USERNAME}/.sdkman/candidates/springboot/current/bin:${PATH}
+# ensure Bash login-ish shell for the next RUNs
+SHELL ["/bin/bash", "-lc"]
+
+ENV SDKMAN_DIR="/home/${DEV_USERNAME}/.sdkman"
+ENV SDKMAN_NON_INTERACTIVE=true   # <— prevents prompts
+
+RUN curl -s https://get.sdkman.io | bash
+RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && sdk install maven ${MAVEN_VERSION} \
+ && sdk install gradle ${GRADLE_VERSION} \
+ && sdk install springboot ${SPRINGBOOT_CLI_VERSION}
+
+# expose candidates on PATH
+ENV PATH="$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$SDKMAN_DIR/candidates/springboot/current/bin:$PATH"
+
+# switch back to the default shell and root for later steps
 USER root
+SHELL ["/bin/sh", "-c"]
 
 # scripts
 COPY scripts/ /opt/scripts/
