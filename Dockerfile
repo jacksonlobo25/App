@@ -19,13 +19,13 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends software-properties-common; \
   add-apt-repository -y universe; \
   apt-get update -o Acquire::Retries=3; \
-  apt-get install -y --no-install-recommends \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates curl wget gnupg lsb-release \
     build-essential pkg-config unzip zip tar xz-utils locales tzdata sudo \
     openssh-server supervisor vim less htop git git-lfs \
     postgresql-client \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
-    libncursesw5-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev \
+    libncurses-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev \
     openjdk-21-jdk-headless; \
   rm -rf /var/lib/apt/lists/*; \
   git lfs install --system
