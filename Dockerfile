@@ -21,15 +21,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
     libncursesw5-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev \
-    && rm -rf /var/lib/apt/lists/* && git lfs install --system
+    openjdk-21-jdk-headless \   # <— add Java here (headless = smaller)
+ && rm -rf /var/lib/apt/lists/* && git lfs install --system
 
 # locale
 RUN sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Java 21
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk \
-    && rm -rf /var/lib/apt/lists/*
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:${PATH}"
 
