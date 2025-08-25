@@ -13,12 +13,14 @@ ARG TZ=UTC
 
 ENV TZ=${TZ}
 
-# base — enable universe first, then install everything in one layer
+# base — enable universe, preseed tzdata, install everything in one layer
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends software-properties-common; \
   add-apt-repository -y universe; \
   apt-get update -o Acquire::Retries=3; \
+  # preseed tzdata to avoid interactive prompt
+  ln -fs "/usr/share/zoneinfo/${TZ:-UTC}" /etc/localtime; \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates curl wget gnupg lsb-release \
     build-essential pkg-config unzip zip tar xz-utils locales tzdata sudo \
@@ -27,6 +29,7 @@ RUN set -eux; \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
     libncurses-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev \
     openjdk-21-jdk-headless; \
+  dpkg-reconfigure -f noninteractive tzdata; \
   rm -rf /var/lib/apt/lists/*; \
   git lfs install --system
 
