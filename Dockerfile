@@ -99,28 +99,28 @@ COPY scripts/ /opt/scripts/
 RUN chmod +x /opt/scripts/*.sh
 
 # supervisor config (ssh key setup + sshd)
-RUN bash -lc 'cat > /etc/supervisor/supervisord.conf << "EOF"\n\
-[supervisord]\n\
-nodaemon=true\n\
-logfile=/var/log/supervisord.log\n\
-\n\
-[program:ssh_setup_keys]\n\
-command=/opt/scripts/ssh-setup-keys.sh\n\
-user=root\n\
-priority=10\n\
-autostart=true\n\
-autorestart=false\n\
-stdout_logfile=/var/log/ssh-setup-keys.log\n\
-stderr_logfile=/var/log/ssh-setup-keys.err\n\
-\n\
-[program:sshd]\n\
-command=/usr/sbin/sshd -D\n\
-priority=50\n\
-autostart=true\n\
-autorestart=true\n\
-stdout_logfile=/var/log/sshd.supervisor.log\n\
-stderr_logfile=/var/log/sshd.supervisor.err\n\
-EOF'
+RUN cat >/etc/supervisor/supervisord.conf <<'EOF'
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisord.log
+
+[program:ssh_setup_keys]
+command=/opt/scripts/ssh-setup-keys.sh
+user=root
+priority=10
+autostart=true
+autorestart=false
+stdout_logfile=/var/log/ssh-setup-keys.log
+stderr_logfile=/var/log/ssh-setup-keys.err
+
+[program:sshd]
+command=/usr/sbin/sshd -D
+priority=50
+autostart=true
+autorestart=true
+stdout_logfile=/var/log/sshd.supervisor.log
+stderr_logfile=/var/log/sshd.supervisor.err
+EOF
 
 EXPOSE 22 8080 5173
 WORKDIR /workspace
