@@ -68,38 +68,29 @@ USER ${DEV_USERNAME}
 SHELL ["/bin/bash", "-lc"]
 
 ENV SDKMAN_DIR="/home/${DEV_USERNAME}/.sdkman"
+# keep it quiet and non-interactive
 ENV SDKMAN_NON_INTERACTIVE=true
+ENV SDKMAN_CLI_NO_INTERACTIVE=true
+ENV SDKMAN_CLI_QUIET=true
 
-# Install SDKMAN under the dev user
+# install SDKMAN
 RUN curl -s https://get.sdkman.io | bash
 
-# Sanity checks: init script present and SDKMAN works
-RUN test -s "$SDKMAN_DIR/bin/sdkman-init.sh"
-RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" && sdk version
+# prove sdk is initialized
+RUN test -s "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && source "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && sdk version
 
-# Install toolchains:
-# - If the requested version exists, install that exact version
-# - Otherwise, install the latest (no version arg)
-RUN set -euo pipefail; \
-    source "$SDKMAN_DIR/bin/sdkman-init.sh"; \
-    stripcolor(){ sed -E 's/\x1b\[[0-9;]*m//g'; }; \
-    install_or_latest(){ \
-      local cand="$1" ver="$2"; \
-      if [ -n "$ver" ] && sdk list "$cand" | stripcolor | grep -qE "(^|[[:space:]])${ver}([[:space:]]|$)"; then \
-        yes | sdk install "$cand" "$ver"; \
-      else \
-        echo "Requested $cand version '${ver}' not found; installing latest."; \
-        yes | sdk install "$cand"; \
-      fi; \
-    }; \
-    install_or_latest maven "${MAVEN_VERSION}"; \
-    install_or_latest gradle "${GRADLE_VERSION}"; \
-    install_or_latest springboot "${SPRINGBOOT_CLI_VERSION}"
+# Try exact versions; if not available, install latest
+RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
+ && (yes | sdk install maven ${MAVEN_VERSION}     || yes | sdk install maven) \
+ && (yes | sdk install gradle ${GRADLE_VERSION}   || yes | sdk install gradle) \
+ && (yes | sdk install springboot ${SPRINGBOOT_CLI_VERSION} || yes | sdk install springboot)
 
-# Put candidates on PATH for later layers and at runtime
+# Put candidates on PATH
 ENV PATH="$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$SDKMAN_DIR/candidates/springboot/current/bin:$PATH"
 
-# back to root + default shell
+# back to root
 USER root
 SHELL ["/bin/sh", "-c"]
 
