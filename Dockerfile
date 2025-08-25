@@ -65,11 +65,11 @@ RUN mkdir -p /var/run/sshd \
 
 # SDKMAN! (Maven, Gradle, Spring Boot CLI) as DEV user
 USER ${DEV_USERNAME}
-# ensure Bash login-ish shell for the next RUNs
 SHELL ["/bin/bash", "-lc"]
 
 ENV SDKMAN_DIR="/home/${DEV_USERNAME}/.sdkman"
-ENV SDKMAN_NON_INTERACTIVE=true   # <— prevents prompts
+# Prevent SDKMAN from prompting during install
+ENV SDKMAN_NON_INTERACTIVE=true
 
 RUN curl -s https://get.sdkman.io | bash
 RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
@@ -77,12 +77,11 @@ RUN source "$SDKMAN_DIR/bin/sdkman-init.sh" \
  && sdk install gradle ${GRADLE_VERSION} \
  && sdk install springboot ${SPRINGBOOT_CLI_VERSION}
 
-# expose candidates on PATH
 ENV PATH="$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$SDKMAN_DIR/candidates/springboot/current/bin:$PATH"
 
-# switch back to the default shell and root for later steps
 USER root
 SHELL ["/bin/sh", "-c"]
+
 
 # scripts
 COPY scripts/ /opt/scripts/
