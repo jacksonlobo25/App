@@ -13,25 +13,30 @@ ARG TZ=UTC
 
 ENV TZ=${TZ}
 
-# base — enable universe, preseed tzdata, install everything in one layer
-RUN set -eux; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends software-properties-common; \
-  add-apt-repository -y universe; \
-  apt-get update -o Acquire::Retries=3; \
-  # preseed tzdata to avoid interactive prompt
-  ln -fs "/usr/share/zoneinfo/${TZ:-UTC}" /etc/localtime; \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN set -eux; apt-get update
+RUN apt-get install -y --no-install-recommends software-properties-common
+RUN add-apt-repository -y universe && apt-get update
+
+# preseed tz first
+RUN set -eux; ln -fs "/usr/share/zoneinfo/${TZ:-UTC}" /etc/localtime; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata; \
+    dpkg-reconfigure -f noninteractive tzdata
+
+# now install in chunks so the failing package is obvious
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates curl wget gnupg lsb-release \
-    build-essential pkg-config unzip zip tar xz-utils locales tzdata sudo \
-    openssh-server supervisor vim less htop git git-lfs \
-    postgresql-client \
+    unzip zip tar xz-utils locales sudo vim less htop
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    build-essential pkg-config git git-lfs
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    openssh-server supervisor
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    postgresql-client
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
-    libncurses-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev \
-    openjdk-21-jdk-headless; \
-  dpkg-reconfigure -f noninteractive tzdata; \
-  rm -rf /var/lib/apt/lists/*; \
-  git lfs install --system
+    libncurses-dev tk-dev libffi-dev liblzma-dev libxml2-dev libxmlsec1-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    openjdk-21-jdk-headless
 
 # locale
 RUN sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && locale-gen
