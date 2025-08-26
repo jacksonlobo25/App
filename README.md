@@ -20,29 +20,12 @@ docker compose up -d --build
 ```
 
 ## 4) Connect with JetBrains Gateway
-- Host: localhost
+- Host: provide hostname where docker is running
 - Port: ${SSH_PORT} (2222 by default)
 - User: ${DEV_USERNAME} (dev by default)
 - Auth: choose the matching private key
 
 ## 5) Create your apps inside /workspace
-- Spring Boot (Initializr or CLI). Point datasource at env:
-  ```yaml
-  spring:
-    datasource:
-      url: ${SPRING_DATASOURCE_URL:${DATABASE_URL_JDBC}}
-      username: ${SPRING_DATASOURCE_USERNAME:${DB_USER}}
-      password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD}}
-  server:
-    port: 8080
-  ```
-- React (Vite): `npm create vite@latest frontend -- --template react-ts` then `npm run dev`.
-  Call backend at `http://localhost:8080` (or set `VITE_API_URL`).
-
-## 6) Test DB from container
-```bash
-psql "$DATABASE_URL" -c "select now();"
-```
 
 ## 7) Stop / start
 ```bash
